@@ -15,6 +15,7 @@ const productInitialState = {
 
 const AddProscut = () => {
   const [product, setProduct] = useState(productInitialState);
+  const [products, setProducts] = useState([]); // State to store the list of products
 
   const onValueChange = (e) => {
     setProduct({ ...product, [e.target.name]: e.target.value });
@@ -38,8 +39,8 @@ const AddProscut = () => {
     formData.append('material', product.material);
     formData.append('details', product.details);
     formData.append('mainImage', product.mainImage);
-    product.additionalImages.forEach((file, index) => {
-      formData.append(`additionalImages`, file);
+    product.additionalImages.forEach((file) => {
+      formData.append('additionalImages', file);
     });
 
     try {
@@ -49,6 +50,9 @@ const AddProscut = () => {
         }
       });
       console.log('Product added:', response.data);
+
+      // Update the products state with the new product
+      setProducts((prevProducts) => [...prevProducts, response.data]);
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -137,7 +141,7 @@ const AddProscut = () => {
           Add Product
         </button>
       </form>
-      <ListProduct products={ListProduct} />
+      <ListProduct products={products} /> {/* Pass the products array to ListProduct */}
     </div>
   );
 };
