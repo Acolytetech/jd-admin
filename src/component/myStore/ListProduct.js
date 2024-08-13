@@ -1,72 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaTrashAlt } from 'react-icons/fa';
+import React from 'react';
 
-const ProductList = () => {
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get('/api/products'); // Backend endpoint
-      setProducts(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleDelete = async (productId) => {
-    try {
-      await axios.delete(`/api/products/${productId}`); // Backend endpoint for delete
-      fetchProducts(); // Refresh the product list after deletion
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
+const ListProduct = ({ products }) => {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Product List</h1>
-      <table className="w-full table-auto border-collapse">
-        <thead>
-          <tr>
-            <th className="border px-4 py-2">S No</th>
-            <th className="border px-4 py-2">Product Photo</th>
-            <th className="border px-4 py-2">Product Name</th>
-            <th className="border px-4 py-2">Price</th>
-            <th className="border px-4 py-2">Delete</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product, index) => (
-            <tr key={product._id}>
-              <td className="border px-4 py-2 text-center">{index + 1}</td>
-              <td className="border px-4 py-2 text-center">
-                <img
-                  src={product.mainImage}
-                  alt={product.name}
-                  className="w-16 h-16 object-cover mx-auto"
-                />
-              </td>
-              <td className="border px-4 py-2 text-center">{product.name}</td>
-              <td className="border px-4 py-2 text-center">${product.price}</td>
-              <td className="border px-4 py-2 text-center">
-                <button
-                  onClick={() => handleDelete(product._id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-red-700 transition-all"
-                >
-                  <FaTrashAlt />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mt-6">
+      <h3 className="text-xl font-bold mb-4">Product List</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {products.map((product) => (
+          <div key={product._id} className="flex flex-col items-center border border-gray-300 p-4 rounded-md">
+            <img src={product.mainImage.url} alt={product.name} className="w-32 h-32 object-cover mb-2" />
+            <div className="text-lg font-semibold">{product.name}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default ProductList;
+export default ListProduct;

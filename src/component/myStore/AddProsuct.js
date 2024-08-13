@@ -1,150 +1,145 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ListProduct from './ListProduct';
 
-const AddProduct = () => {
-  const [product, setProduct] = useState({
-    mainImage: null,
-    productName: '',
-    description: '',
-    price: '',
-    additionalImages: []
-  });
+const productInitialState = {
+  name: '',
+  price: '',
+  rating: '',
+  size: '',
+  material: '',
+  details: '',
+  mainImage: null,
+  additionalImages: []
+};
 
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate();
+const AddProscut = () => {
+  const [product, setProduct] = useState(productInitialState);
 
-  const handleMainImageChange = (e) => {
-    const file = e.target.files[0];
-    setProduct({ ...product, mainImage: file });
+  const onValueChange = (e) => {
+    setProduct({ ...product, [e.target.name]: e.target.value });
   };
 
-  const handleAdditionalImageChange = (e) => {
-    const files = e.target.files;
-    const additionalImagesArray = Array.from(files);
-    setProduct({ ...product, additionalImages: additionalImagesArray });
+  const onFileChange = (e) => {
+    if (e.target.name === 'mainImage') {
+      setProduct({ ...product, mainImage: e.target.files[0] });
+    } else if (e.target.name === 'additionalImages') {
+      setProduct({ ...product, additionalImages: Array.from(e.target.files) });
+    }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProduct({ ...product, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
+  const submitForm = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', product.name);
+    formData.append('price', product.price);
+    formData.append('rating', product.rating);
+    formData.append('size', product.size);
+    formData.append('material', product.material);
+    formData.append('details', product.details);
+    formData.append('mainImage', product.mainImage);
+    product.additionalImages.forEach((file, index) => {
+      formData.append(`additionalImages`, file);
+    });
+
     try {
-      const formData = new FormData();
-      formData.append('mainImage', product.mainImage);
-      formData.append('productName', product.productName);
-      formData.append('description', product.description);
-      formData.append('price', product.price);
-      product.additionalImages.forEach((image) => {
-        formData.append('additionalImages', image);
+      const response = await axios.post('http://localhost:4000/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
-  
-      // Send the form data to the backend using axios
-      const response = await axios.post('http://localhost:5000/api/products', formData);
-  
-      // Handle the response, e.g., show success message, update UI, etc.
-      console.log(response.data);
-      setSuccessMessage('Product added successfully.');
-  
-      // Reset the form after submission
-      setProduct({ mainImage: null, productName: '', description: '', price: '', additionalImages: [] });
-  
-      // Redirect to ProductList page after successful submission
-      navigate('/list-product', { replace: true });
+      console.log('Product added:', response.data);
     } catch (error) {
-      // Handle errors, e.g., show error message, log the error, etc.
-      console.error(error);
-      setErrorMessage('Failed to add product. Please try again.');
+      console.error('Error adding product:', error);
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row">
-        {/* Main Image Upload */}
-        <div className="w-full md:w-1/2 p-4">
-          <label htmlFor="mainImage" className="w-64 h-64 bg-gray-300 flex justify-center items-center text-3xl font-bold cursor-pointer">
-            {product.mainImage ? (
-              <img src={URL.createObjectURL(product.mainImage)} alt="Main Product" className="w-full h-full object-cover" />
-            ) : (
-              '+'
-            )}
-            <input
-              type="file"
-              id="mainImage"
-              name="mainImage"
-              accept="image/*"
-              onChange={handleMainImageChange}
-              className="hidden"
-            />
-          </label>
-        </div>
-
-        {/* Additional Images Upload */}
-        <div className="w-full md:w-1/2 p-4">
-          <label htmlFor="additionalImages" className="w-full h-64 bg-gray-300 flex justify-center items-center text-3xl font-bold cursor-pointer">
-            {product.additionalImages.length > 0 ? (
-              product.additionalImages.map((image, index) => (
-                <img key={index} src={URL.createObjectURL(image)} alt={`Additional Image ${index}`} className="w-full h-full object-cover" />
-              ))
-            ) : (
-              '+'
-            )}
-            <input
-              type="file"
-              id="additionalImages"
-              name="additionalImages"
-              accept="image/*"
-              multiple
-              onChange={handleAdditionalImageChange}
-              className="hidden"
-            />
-          </label>
-        </div>
-
-        {/* Product Details */}
-        <div className="w-full md:w-1/2 p-4 space-y-4">
+    <div className="max-w-md mx-auto p-4 bg-white shadow-md rounded-lg">
+      <h2 className="text-2xl font-bold mb-4">Add New Product</h2>
+      <form onSubmit={submitForm}>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Product Name</label>
           <input
             type="text"
-            name="productName"
-            value={product.productName}
-            placeholder="Product Name"
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+            name="name"
+            onChange={onValueChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
-          <textarea
-            name="description"
-            value={product.description}
-            placeholder="Description"
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-          ></textarea>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Price</label>
           <input
-            type="text"
+            type="number"
             name="price"
-            value={product.price}
-            placeholder="Price"
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+            onChange={onValueChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
-          <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-all">
-            Add Product
-          </button>
         </div>
-      </form>
-      {successMessage && <div className="mt-4 text-green-600">{successMessage}</div>}
-      {errorMessage && <div className="mt-4 text-red-600">{errorMessage}</div>}
-      <div className="mt-4">
-        <button onClick={() => navigate('/list-product', { replace: true })} className="bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-green-700 transition-all">
-          Go to Product List
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Rating</label>
+          <input
+            type="number"
+            name="rating"
+            onChange={onValueChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Size</label>
+          <input
+            type="text"
+            name="size"
+            onChange={onValueChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Material</label>
+          <input
+            type="text"
+            name="material"
+            onChange={onValueChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Details</label>
+          <textarea
+            name="details"
+            onChange={onValueChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Main Image</label>
+          <input
+            type="file"
+            name="mainImage"
+            onChange={onFileChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Additional Images</label>
+          <input
+            type="file"
+            multiple
+            name="additionalImages"
+            onChange={onFileChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+        >
+          Add Product
         </button>
-      </div>
+      </form>
+      <ListProduct products={ListProduct} />
     </div>
   );
 };
 
-export default AddProduct;
+export default AddProscut;
