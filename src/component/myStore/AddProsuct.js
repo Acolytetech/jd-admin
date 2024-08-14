@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import ListProduct from './ListProduct';
 
 const productInitialState = {
   name: '',
@@ -13,7 +12,7 @@ const productInitialState = {
   additionalImages: []
 };
 
-const AddProscut = () => {
+const AddProduct = () => {
   const [product, setProduct] = useState(productInitialState);
   const [products, setProducts] = useState([]); // State to store the list of products
 
@@ -22,37 +21,46 @@ const AddProscut = () => {
   };
 
   const onFileChange = (e) => {
-    if (e.target.name === 'mainImage') {
-      setProduct({ ...product, mainImage: e.target.files[0] });
-    } else if (e.target.name === 'additionalImages') {
-      setProduct({ ...product, additionalImages: Array.from(e.target.files) });
+    const { name } = e.target;
+    const files = e.target.files;
+
+    if (name === 'mainImage') {
+      setProduct({ ...product, mainImage: files[0] });
+    } else if (name === 'additionalImages') {
+      setProduct({ ...product, additionalImages: Array.from(files) });
     }
   };
 
   const submitForm = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
-    formData.append('name', product.name);
-    formData.append('price', product.price);
-    formData.append('rating', product.rating);
-    formData.append('size', product.size);
-    formData.append('material', product.material);
-    formData.append('details', product.details);
-    formData.append('mainImage', product.mainImage);
-    product.additionalImages.forEach((file) => {
-      formData.append('additionalImages', file);
-    });
+    for (const key in product) {
+      if (key === 'additionalImages') {
+        product[key].forEach((file) => {
+          formData.append('additionalImages', file);
+        });
+      } else {
+        formData.append(key, product[key]);
+      }
+    }
 
     try {
-      const response = await axios.post('http://localhost:4000/', formData, {
+      const response = await axios.post('http://localhost:4000/add-product', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
       console.log('Product added:', response.data);
 
-      // Update the products state with the new product
-      setProducts((prevProducts) => [...prevProducts, response.data]);
+      // If the response is a single product object
+      if (response.data) {
+        setProducts([...products, response.data]);
+      }
+
+      // Reset product form state to initial state after submission
+      setProduct(productInitialState);
+
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -67,6 +75,7 @@ const AddProscut = () => {
           <input
             type="text"
             name="name"
+            value={product.name}
             onChange={onValueChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
@@ -76,6 +85,7 @@ const AddProscut = () => {
           <input
             type="number"
             name="price"
+            value={product.price}
             onChange={onValueChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
@@ -85,6 +95,7 @@ const AddProscut = () => {
           <input
             type="number"
             name="rating"
+            value={product.rating}
             onChange={onValueChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
@@ -94,6 +105,7 @@ const AddProscut = () => {
           <input
             type="text"
             name="size"
+            value={product.size}
             onChange={onValueChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
@@ -103,6 +115,7 @@ const AddProscut = () => {
           <input
             type="text"
             name="material"
+            value={product.material}
             onChange={onValueChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
@@ -111,6 +124,7 @@ const AddProscut = () => {
           <label className="block text-sm font-medium mb-1">Details</label>
           <textarea
             name="details"
+            value={product.details}
             onChange={onValueChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
@@ -125,7 +139,7 @@ const AddProscut = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Additional Images</label>
+          <label className="block text-sm font-medium mb-1">Additional Images (Up to 4)</label>
           <input
             type="file"
             multiple
@@ -134,16 +148,16 @@ const AddProscut = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
         </div>
+        
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600"
         >
           Add Product
         </button>
       </form>
-      <ListProduct products={products} /> {/* Pass the products array to ListProduct */}
     </div>
   );
 };
 
-export default AddProscut;
+export default AddProduct;
