@@ -1,22 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
 
-const productInitialState = {
-  name: '',
-  price: '',
-  rating: '',
-  size: '',
-  material: '',
-  details: '',
-  mainImage: null,
-  additionalImages: [],
-  units: 1, // Added units with default value 1
-  includeSize: false, // New field to control size input
-};
+const EditProduct = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState({
+    name: '',
+    price: '',
+    rating: '',
+    size: '',
+    material: '',
+    details: '',
+    mainImage: null,
+    additionalImages: [],
+    units: 1,
+    includeSize: false,
+  });
 
-const AddProduct = () => {
-  const [product, setProduct] = useState(productInitialState);
-  const [products, setProducts] = useState([]); // State to store the list of products
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/products/${id}`);
+        const productData = response.data;
+        setProduct({
+          ...productData,
+          includeSize: !!productData.size,
+          mainImage: null,
+          additionalImages: [],
+        });
+      } catch (error) {
+        console.error('Failed to fetch product:', error);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const onValueChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -29,8 +48,6 @@ const AddProduct = () => {
   const onFileChange = (e) => {
     const { name } = e.target;
     const files = e.target.files;
-
-    console.log(name, files); // Debug files
 
     if (name === 'mainImage') {
       setProduct({ ...product, mainImage: files[0] });
@@ -53,33 +70,24 @@ const AddProduct = () => {
       }
     }
 
-    // Debug formData contents
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
     try {
-      const response = await axios.post('http://localhost:4000/products;', formData, {
+      const response = await axios.put(`http://localhost:4000/products/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Product added:', response.data);
 
-      if (response.data) {
-        setProducts([...products, response.data]);
-      }
+      console.log('Product updated:', response.data);
 
-      setProduct(productInitialState);
-
+      navigate('/'); // Redirect to the product list after update
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error('Error updating product:', error);
     }
   };
 
   return (
     <div className="max-w-md mx-auto p-4 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">Add New Product</h2>
+      <h2 className="text-2xl font-bold mb-4">Edit Product</h2>
       <form onSubmit={submitForm}>
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Product Name</label>
@@ -111,7 +119,6 @@ const AddProduct = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
         </div>
-
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
             <input
@@ -124,7 +131,6 @@ const AddProduct = () => {
             Include Size
           </label>
         </div>
-
         {product.includeSize && (
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Size</label>
@@ -137,7 +143,6 @@ const AddProduct = () => {
             />
           </div>
         )}
-
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Material</label>
           <input
@@ -176,7 +181,6 @@ const AddProduct = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
         </div>
-
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Units</label>
           <input
@@ -187,16 +191,15 @@ const AddProduct = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
         </div>
-
         <button
           type="submit"
           className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600"
         >
-          Add Product
+          Update Product
         </button>
       </form>
     </div>
   );
 };
 
-export default AddProduct;
+export default EditProduct;

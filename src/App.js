@@ -8,6 +8,7 @@ import './App.css';
 import AddProsuct from './component/myStore/AddProsuct';
 // import { List } from '@mui/material';
 import ListProduct from './component/myStore/ListProduct';
+import EditProduct from './component/myStore/EditProduct';
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/add-product" element={<AddProsuct />} />
+            <Route path="/edit-product/:id" element={<EditProduct/>} />
             <Route path="/list-product" element={<ListProduct />} />
             {/* Add other routes here */}
           </Routes>
